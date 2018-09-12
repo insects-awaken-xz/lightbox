@@ -1,4 +1,4 @@
-class XZLightBox {
+class LightBox {
   constructor () {
     let timeout
     const holdScroll = e => e.preventDefault()
@@ -133,4 +133,4 @@ class XZLightBox {
   }
 }
 
-export default new XZLightBox()
+export default new LightBox()

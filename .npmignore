@@ -11,4 +11,6 @@ package-lock.json
 
 # dev
 src
+build
+example
 .babelrc

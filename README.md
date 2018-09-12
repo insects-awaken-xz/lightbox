@@ -24,5 +24,5 @@ lightbox.start()                 // default opts
 ```
 #### Attention
 * fucntion option should call before start, and only be executed once.
-* ❌  lightbox.start().option({...})
+* ❌  lightbox.start();  lightbox.option({...})
 * ✅  lightbox.option({...}).start()

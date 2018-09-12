@@ -23,6 +23,7 @@ lightbox.option({
 lightbox.start()                 // default opts
 ```
 #### Attention
-* fucntion option should call before start, and only be executed once.
-* ❌  lightbox.start();  lightbox.option({...})
-* ✅  lightbox.option({...}).start()
+* function option called before start is better
+* Recommend：     lightbox.option({...}).start()
+* No Recommend：  lightbox.start();  lightbox.option({...})
+* if function option called after start listenAttr，backdropColor, backdropOpacity won't take

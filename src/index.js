@@ -52,7 +52,7 @@ class LightBox {
 
     const style = document.createElement('style')
     // style.innerHTML = `${this.opts.listenAttr}`
-    style.innerHTML = `html.xz-locked{overflow:hidden !important}html img[${this.opts.listenAttr}]{cursor:zoom-in}html img.xz-force-hide{opacity:0}html .xz-lightbox{position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999}html .xz-lightbox.hide{display:none}html .xz-lightbox .xz-lightbox-backdrop{position:absolute;top:0;left:0;width:inherit;height:inherit}html .xz-lightbox .xz-lightbox-backdrop.transparent{opacity:.01 !important}html .xz-lightbox .xz-lightbox-img{cursor:zoom-out}`
+    style.innerHTML = `html.xz-locked{overflow:hidden !important}html img[${this.opts.listenAttr}]{cursor:zoom-in}html img.xz-force-hide{opacity:0}html .xz-lightbox{position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999}html .xz-lightbox.hide{display:none}html .xz-lightbox .xz-lightbox-backdrop{position:absolute;top:0;left:0;width:inherit;height:inherit}html .xz-lightbox .xz-lightbox-backdrop.transparent{opacity:.01 !important}html .xz-lightbox .xz-lightbox-img{display:block;cursor:zoom-out}`
     document.body.appendChild(style)
 
     this.$img.addEventListener('transitionend', () => {

@@ -3,16 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <title>xz-lightbox</title>
-  <link rel="fluid-icon" href="https://github.com/fluidicon.png" title="GitHub">
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <script src="../dist/lightbox.min.js"></script>
   <style>
+    body {
+      margin: 0;
+      text-align: center;
+    }
+
     .test {
       width: 300px;
       height: 200px;
     }
   </style>
 </head>
-<body style="margin: 0;">
+<body>
 <img class="test" xz-lightbox src="//home1.img.focus.cn/bp_65296f8abbee4f0aba42b88680370302">
 <img class="test" xz-lightbox src="//home1.img.focus.cn/bp_7523af28dd8d486e9029b424f2d73736">
 <img class="test" xz-lightbox src="//home1.img.focus.cn/bp_3e6b2b224c384962a08e3093e69ca785">
@@ -20,6 +25,17 @@
 <img class="test" xz-lightbox src="//home1.img.focus.cn/bp_5dd0dcb9f4334588bbafb7dba4c2b636">
 <img class="test" xz-lightbox src="//home1.img.focus.cn/bp_3aec8993f99943cdadebd06eb7d95297">
 <img class="test" xz-lightbox src="//home1.img.focus.cn/bp_79115d55358d4b508226323896abaa8f">
+<div>
+  <button onclick="lightbox.option()">默认配置</button>
+  <button onclick="lightbox.option({hideEl: true})">隐藏点击图片 {hideImg: true}</button>
+  <button onclick="lightbox.option({duration: 382})">修改动画时间 {duration: 382}</button>
+  <button onclick="lightbox.option({offsetDistance: 400})">修改距最大距离窗口 {offsetDistance: 400}</button>
+
+  <button onclick="lightbox.option({listenAttr: 'x666'})" disabled>修改监听属性 {listenAttr: 'x666'}</button>
+  <button onclick="lightbox.option({backdropColor: '#ee5744'})" disabled>修改背景颜色 {backdropColor: '#ee5744'}</button>
+  <button onclick="lightbox.option({backdropOpacity: 0.789})" disabled>修改背景透明度 {backdropOpacity: 0.789}</button>
+  <p style="font-size: 12px;">上述配置点击不能叠加，其中listenAttr, backdropColor, backdropOpacity 三项配置在start后修改不生效</p>
+</div>
 <script>
 window.onload = function () {
   lightbox.start()

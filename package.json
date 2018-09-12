@@ -1,0 +1,27 @@
+{
+  "name": "x-lightbox",
+  "version": "0.1.0",
+  "description": "A Native Javascript lightbox. Support ie11 and modern browsers.",
+  "main": "dist/lightbox.min.js",
+  "scripts": {
+    "build": "node build/rollup.config.js",
+    "build:scss": "node-sass src/index.scss dist/lightbox.min.css --output-style compressed"
+  },
+  "keywords": [
+    "img",
+    "image",
+    "lightbox"
+  ],
+  "author": "xzw",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "node-sass": "^4.9.3",
+    "rollup": "^0.65.2",
+    "rollup-plugin-babel": "^4.0.3",
+    "rollup-plugin-uglify": "^5.0.2"
+  }
+}

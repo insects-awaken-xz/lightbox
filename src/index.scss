@@ -1,0 +1,35 @@
+html {
+  &.xz-locked {
+    overflow: hidden !important;
+  }
+  img[xz-lightbox] {
+    cursor: zoom-in;
+  }
+  img.xz-force-hide {
+    opacity: 0;
+  }
+  .xz-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 99999;
+    &.hide {
+      display: none;
+    }
+    .xz-lightbox-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: inherit;
+      height: inherit;
+      &.transparent {
+        opacity: .01 !important;
+      }
+    }
+    .xz-lightbox-img {
+      cursor: zoom-out;
+    }
+  }
+}

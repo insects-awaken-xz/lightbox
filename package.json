@@ -1,5 +1,5 @@
 {
-  "name": "x-lightbox",
+  "name": "xz-lightbox",
   "version": "0.1.0",
   "description": "A Native Javascript lightbox. Support ie11 and modern browsers.",
   "main": "dist/lightbox.min.js",

@@ -1,6 +1,6 @@
 {
   "name": "xz-lightbox",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A Native Javascript lightbox. Support ie11 and modern browsers.",
   "main": "dist/lightbox.min.js",
   "scripts": {

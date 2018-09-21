@@ -12,18 +12,17 @@ npm i --save xz-lightbox
 
 ```
 lightbox.option({
-    duration: 618,               // transition time ms           default: 618
-    hideEl: true,                // need hide img be clicked     default: false
-    offsetDistance: 20,          // offset to window             default: 60
-    listenAttr: 'xz-lightbox',   // need listen img attribute    default: 'xz-lightbox'
-    backdropColor: '#000',       // backdrop background color    default: '#000'
-    backdropOpacity: 0.618       // backdrop opacity             default: 0.618
+    duration: 618,   // transition time ms           default: 618
+    hide: true,      // need hide img be clicked     default: false
+    offset: 60,      // offset to window             default: 20
 }).start()
 
-lightbox.start()                 // default opts
+lightbox.option({
+    onShowing: () => ({}),         // showing process
+    onShowed: () => ({}),          // has showed
+    onDisappearing: () => ({}),    // disappear process
+    onDisappeared: () => ({}),     // has disappeared
+})
+
+lightbox.start()     // default opts
 ```
-#### Attention
-* function option called before start is better
-* Recommend：     lightbox.option({...}).start()
-* No Recommend：  lightbox.start();  lightbox.option({...})
-* if function option called after start listenAttr，backdropColor, backdropOpacity won't take

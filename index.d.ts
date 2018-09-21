@@ -1,11 +1,12 @@
 declare namespace lightbox {
 	export type LightboxOption = {
-		hideEl: Boolean,
-		duration: Number,
-		offsetDistance: Number,
-		listenAttr: String,
-		backdropColor: String,
-		backdropOpacity: Number
+		hide?: Boolean,
+		duration?: Number,
+		offset?: Number,
+		onDisappeared?: Function,
+		onShowing?: Function,
+		onShowed?: Function,
+		onDisappearing?: Function
 	}
 
 	class Lightbox {

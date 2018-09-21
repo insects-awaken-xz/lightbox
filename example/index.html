@@ -5,6 +5,7 @@
   <title>xz-lightbox</title>
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <script src="../dist/lightbox.min.js"></script>
+  <link rel="stylesheet" href="../dist/lightbox.min.css">
   <style>
     body {
       margin: 0;
@@ -12,10 +13,71 @@
     }
 
     .test {
-      width: 300px;
+      width: 47.4%;
       height: 200px;
     }
   </style>
+  <script>
+  if (!Object.assign) {
+    Object.prototype.assign = function (target) {
+      if (target == null) {
+        throw TypeError('Cannot covert undefined or null to object')
+      }
+      for (var i = 1; i < arguments.length; ++i) {
+        const arg = arguments[i]
+        if (arg == null)
+          continue
+        for (var key in arg) {
+          if (Object.hasOwnProperty.call(arg, key)) {
+            target[key] = arg[key]
+          }
+        }
+      }
+      return target
+    }
+  }
+
+  window.onload = function () {
+    var opts = {}
+    lightbox.start()
+    window.addEventListener('click', function (e) {
+      var t = e.target
+      if (t.tagName !== 'BUTTON')
+        return
+      switch (t.id) {
+        case 'b1':
+          opts = {}
+          break
+        case 'b2':
+          Object.assign(opts, {hide: true})
+          break
+        case 'b3':
+          Object.assign(opts, {duration: 300})
+          break
+        case 'b4':
+          Object.assign(opts, {offset: 10})
+          break
+        case 'b5':
+          Object.assign(opts, {
+            onShowing: function () {
+              console.info('showing')
+            },
+            onShowed: function () {
+              alert('showed')
+            },
+            onDisappearing: function () {
+              console.info('disappearing')
+            },
+            onDisappeared: function () {
+              alert('disappeared')
+            }
+          })
+          break
+      }
+      lightbox.option(opts)
+    })
+  }
+  </script>
 </head>
 <body>
 <img class="test" xz-lightbox src="//home1.img.focus.cn/bp_65296f8abbee4f0aba42b88680370302">
@@ -26,20 +88,11 @@
 <img class="test" xz-lightbox src="//home1.img.focus.cn/bp_3aec8993f99943cdadebd06eb7d95297">
 <img class="test" xz-lightbox src="//home1.img.focus.cn/bp_79115d55358d4b508226323896abaa8f">
 <div>
-  <button onclick="lightbox.option()">默认配置</button>
-  <button onclick="lightbox.option({hideEl: true})">隐藏点击图片 {hideImg: true}</button>
-  <button onclick="lightbox.option({duration: 382})">修改动画时间 {duration: 382}</button>
-  <button onclick="lightbox.option({offsetDistance: 400})">修改距最大距离窗口 {offsetDistance: 400}</button>
-
-  <button onclick="lightbox.option({listenAttr: 'x666'})" disabled>修改监听属性 {listenAttr: 'x666'}</button>
-  <button onclick="lightbox.option({backdropColor: '#ee5744'})" disabled>修改背景颜色 {backdropColor: '#ee5744'}</button>
-  <button onclick="lightbox.option({backdropOpacity: 0.789})" disabled>修改背景透明度 {backdropOpacity: 0.789}</button>
-  <p style="font-size: 12px;">上述配置点击不能叠加，其中listenAttr, backdropColor, backdropOpacity 三项配置在start后修改不生效</p>
+  <button id="b1">默认配置</button>
+  <button id="b2">隐藏点击图片 {hide: true}</button>
+  <button id="b3">修改动画时间 {duration: 300}</button>
+  <button id="b4">修改距最大距离窗口 {offset: 10}</button>
+  <button id="b5">钩子函数(控制台输出)</button>
 </div>
-<script>
-window.onload = function () {
-  lightbox.start()
-}
-</script>
 </body>
 </html>

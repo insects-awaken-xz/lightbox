@@ -8,3 +8,8 @@
 node_modules
 yarn.lock
 package-lock.json
+
+# dev
+dist/index.html
+dist/lightbox.js
+build/rollup.dev.config.js

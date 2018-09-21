@@ -5,8 +5,8 @@ html {
   img[xz-lightbox] {
     cursor: zoom-in;
   }
-  img.xz-force-hide {
-    opacity: 0;
+  .xz-force-transparent {
+    opacity: 0 !important;
   }
   .xz-lightbox {
     position: fixed;
@@ -15,7 +15,7 @@ html {
     width: 100%;
     height: 100%;
     z-index: 99999;
-    &.hide {
+    &.xz-hide {
       display: none;
     }
     .xz-lightbox-backdrop {
@@ -24,9 +24,7 @@ html {
       left: 0;
       width: inherit;
       height: inherit;
-      &.transparent {
-        opacity: .01 !important;
-      }
+      background: rgba(0, 0, 0, .618);
     }
     .xz-lightbox-img {
       display: block;

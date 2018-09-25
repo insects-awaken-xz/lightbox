@@ -29,7 +29,7 @@ lightbox.option({...}).start()
 lightbox.option({
     duration: 618,   // transition time ms           default: 618
     hide: true,      // need hide img be clicked     default: false
-    offset: 60,      // offset to window             default:60
+    offset: 100,     // offset to window             default: 100
 }).start();
 lightbox.option({
 	onShowing: () => ({}),         // showing process

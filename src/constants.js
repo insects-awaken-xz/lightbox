@@ -1,11 +1,15 @@
 const CLASS = {
-  LIGHTBOX: 'xz-lightbox',
-  BACKDROP: 'xz-lightbox-backdrop',
-  IMG: 'xz-lightbox-img',
+  LIGHTBOX: 'xlb',
+  BACKDROP: 'xlb-backdrop',
+  IMG: 'xlb-img',
+  ALBUM: 'xlb-album',
+  ARROW: 'xlb-arrow',
+  ARROW_RIGHT: 'xlb-arrow-right',
+  ARROW_LEFT: 'xlb-arrow-left',
 
-  HIDE: 'xz-hide',
-  LOCKED: 'xz-locked',
-  FORCE_TRANSPARENT: 'xz-force-transparent'
+  HIDE: 'xlb-hide',
+  LOCKED: 'xlb-locked',
+  FORCE_TRANSPARENT: 'xlb-force-transparent'
 }
 
 const STATUS = {
@@ -25,7 +29,7 @@ const EVENTS = {
 const DEFAULT_OPTS = {
   hide: false,
   duration: 618,
-  offset: 60
+  offset: 100
 }
 
 export {

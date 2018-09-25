@@ -3,26 +3,39 @@
 The Native Javascript lightbox.
 Support ie11 and modern browsers.
 
-#### Get Started
+### Get Started
+
+* via NPM
+```
+npm i --save xz-lightbox@latest
+
+import lightbox from 'xz-lightbox'
+lightbox.option({...}).start()
+```
+
+* via CDN
 
 ```
-npm i --save xz-lightbox
-```
-#### Simple API
+<link src="https://unpkg.com/xz-lightbox@latest/dist/lightbox.min.css">
+<script src="https://unpkg.com/xz-lightbox"></script>
+<script>
+ lightbox.option({...}).start();
+</script>
+ ```
+
+### Simple API
 
 ```
 lightbox.option({
     duration: 618,   // transition time ms           default: 618
     hide: true,      // need hide img be clicked     default: false
-    offset: 60,      // offset to window             default: 20
-}).start()
-
+    offset: 60,      // offset to window             default:60
+}).start();
 lightbox.option({
-    onShowing: () => ({}),         // showing process
-    onShowed: () => ({}),          // has showed
-    onDisappearing: () => ({}),    // disappear process
-    onDisappeared: () => ({}),     // has disappeared
-})
-
-lightbox.start()     // default opts
+	onShowing: () => ({}),         // showing process
+	onShowed: () => ({}),          // has showed
+	onDisappearing: () => ({}),    // disappear process
+	onDisappeared: () => ({}),     // has disappeared
+}) ;
+lightbox.start();     // default opts
 ```

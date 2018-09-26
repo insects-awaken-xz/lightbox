@@ -2,7 +2,8 @@
 const throttle = (wait, cb) => {
   let timeout
   return function (arg) {
-    if (timeout) return
+    if (timeout)
+      return
     timeout = setTimeout(() => {
       cb(arg)
       timeout = 0
@@ -10,10 +11,18 @@ const throttle = (wait, cb) => {
   }
 }
 
-/** holdScroll */
-const holdScroll = e => e.preventDefault()
+/** preventDefault */
+const preventDefault = e => e.preventDefault()
+
+/** css */
+const css = (el, obj) => {
+  if (!(el instanceof HTMLElement))
+    return
+  Object.keys(obj).map(attribute => el.style[attribute] = obj[attribute])
+}
 
 export {
+  css,
   throttle,
-  holdScroll
+  preventDefault
 }

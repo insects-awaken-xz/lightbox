@@ -1,5 +1,5 @@
-import {throttle, holdScroll} from './utils'
-import {CLASS, STATUS, EVENTS, DEFAULT_OPTS} from './constants'
+import {css, throttle, preventDefault} from './utils'
+import {CLASS, STATUS, EVENTS, INFO, LISTEN_ATTR, DEFAULT_OPTS} from './constants'
 
 let throttleActive
 let throttleKeyBoard
@@ -41,41 +41,56 @@ class LightBox {
     this.$lightbox = document.createElement('div')
     this.$lightbox.id = CLASS.LIGHTBOX
     this.$lightbox.classList.add(CLASS.LIGHTBOX, CLASS.HIDE)
+
     this.$backdrop = document.createElement('div')
     this.$backdrop.classList.add(CLASS.BACKDROP, CLASS.FORCE_TRANSPARENT)
-    this.$albumName = document.createElement('h1')
-    this.$albumName.classList.add(CLASS.ALBUM, CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
+
     this.$img = document.createElement('img')
     this.$img.classList.add(CLASS.IMG)
+
     this.$arrowR = document.createElement('div')
     this.$arrowR.classList.add(CLASS.ARROW, CLASS.ARROW_RIGHT, CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
     this.$arrowL = document.createElement('div')
     this.$arrowL.classList.add(CLASS.ARROW, CLASS.ARROW_LEFT, CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
+
+    this.$info = document.createElement('div')
+    this.$info.classList.add(CLASS.INFO, CLASS.HIDE)
+    this.$pagination = document.createElement('div')
+    this.$pagination.classList.add(CLASS.PAGINATION, CLASS.HIDE)
+    this.$title = document.createElement('div')
+    this.$title.classList.add(CLASS.TITLE)
+    this.$desc = document.createElement('div')
+    this.$desc.classList.add(CLASS.DESC)
+    this.$info.appendChild(this.$pagination)
+    this.$info.appendChild(this.$title)
+    this.$info.appendChild(this.$desc)
+
     this.$lightbox.appendChild(this.$backdrop)
     this.$lightbox.appendChild(this.$img)
-    this.$lightbox.appendChild(this.$albumName)
-    this.$lightbox.appendChild(this.$arrowR)
     this.$lightbox.appendChild(this.$arrowL)
+    this.$lightbox.appendChild(this.$arrowR)
+    this.$lightbox.appendChild(this.$info)
     document.body.appendChild(this.$lightbox)
     this._setDuration()
 
     /* init listener function */
-    throttleActive = throttle(17, this._active.bind(this))
-    throttleKeyBoard = throttle(17, this._keyboard.bind(this))
-    throttlePrevPage = throttle(17, this._prevPage.bind(this))
-    throttleNextPage = throttle(17, this._nextPage.bind(this))
+    throttleActive = throttle(33, this._active.bind(this))
+    throttleKeyBoard = throttle(33, this._keyboard.bind(this))
+    throttlePrevPage = throttle(33, this._prevPage.bind(this))
+    throttleNextPage = throttle(33, this._nextPage.bind(this))
   }
 
   _setDuration () {
-    this.$img.style.transition = `transform ${this.opts.duration}ms ease`
-    this.$albumName.style.transition =
-      this.$arrowR.style.transition =
-        this.$arrowL.style.transition =
-          this.$backdrop.style.transition = `opacity ${this.opts.duration}ms ease`
+    const t = `${this.opts.duration}ms ease`
+    css(this.$img, {transition: `transform ${t}`})
+    css(this.$info, {transition: `bottom ${t}, left ${t}, width ${t}`})
+    css(this.$backdrop, {transition: `opacity ${t}`})
+    css(this.$arrowR, {transition: `opacity ${t}, border-color 300ms ease`})
+    css(this.$arrowL, {transition: `opacity ${t}, border-color 300ms ease`})
   }
 
   /**
-   * event listener, shouldn't remove listener
+   * event listener, shouldn't be removed
    */
   _listen () {
     this.$img.addEventListener('transitionend', () =>
@@ -85,9 +100,9 @@ class LightBox {
           ? STATUS.DISAPPEARED
           : '' /* impossible status */
     )
-    this.$backdrop.addEventListener('click', () =>
+    this.$backdrop.addEventListener('click', () => {
       this.status = STATUS.DISAPPEARING
-    )
+    })
   }
 
   /**
@@ -97,9 +112,11 @@ class LightBox {
     const elStyle = this.$el.getBoundingClientRect()
     this.calc.elW = elStyle.width
     this.calc.elH = elStyle.height
-    this.$img.style.width = `${this.calc.elW}px`
-    this.$img.style.height = `${this.calc.elH}px`
-    this.$img.style.transform = `translate(${elStyle.left}px, ${elStyle.top}px) scale(1, 1)`
+    css(this.$img, {
+      width: `${this.calc.elW}px`,
+      height: `${this.calc.elH}px`,
+      transform: `translate(${elStyle.left}px, ${elStyle.top}px) scale(1, 1)`
+    })
     this.$backdrop.classList.add(CLASS.FORCE_TRANSPARENT)
   }
 
@@ -110,6 +127,7 @@ class LightBox {
     const s = this.$lightbox.getBoundingClientRect()
     const screenW = s.width - this.opts.offset
     const screenH = s.height - this.opts.offset
+
     if (this.calc.originW <= screenW && this.calc.originH <= screenH) {
       this.calc.lastW = this.calc.originW
     } else {
@@ -118,12 +136,19 @@ class LightBox {
         this.calc.lastW = screenH / this.calc.originRatio
       }
     }
+    const lastH = this.calc.lastW * this.calc.originRatio
+
     const scaleX = this.calc.lastW / this.calc.elW
-    const scaleY = this.calc.lastW * this.calc.originRatio / this.calc.elH
+    const scaleY = lastH / this.calc.elH
     const translateX = (screenW + this.opts.offset - this.calc.elW) / 2
     const translateY = (screenH + this.opts.offset - this.calc.elH) / 2
-    this.$img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`
+    css(this.$img, {transform: `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`})
     this.$backdrop.classList.remove(CLASS.FORCE_TRANSPARENT)
+    css(this.$info, {
+      bottom: `${(s.height - lastH) / 2 - 1}px`,
+      width: `${this.calc.lastW}px`,
+      left: `${(s.width - this.calc.lastW) / 2}px`
+    })
   }
 
   /**
@@ -140,9 +165,9 @@ class LightBox {
       this.$lightbox.classList.add(CLASS.HIDE)
 
       /* change el status, remove event listen */
-      this.$img.style.willChange = 'auto'
+      css(this.$img, {willChange: 'auto'})
       document.documentElement.classList.remove(CLASS.LOCKED)
-      window.removeEventListener('touchmove', holdScroll)
+      window.removeEventListener('touchmove', preventDefault)
       window.removeEventListener('resize', throttleActive)
 
       /* clear data */
@@ -154,7 +179,6 @@ class LightBox {
         this.album = []
         this.$arrowR.classList.add(CLASS.HIDE)
         this.$arrowL.classList.add(CLASS.HIDE)
-        this.$albumName.classList.add(CLASS.HIDE)
       }
     } else {
       if (this.status === STATUS.SHOWING) {
@@ -168,18 +192,29 @@ class LightBox {
         this._active()
 
         if (this.isAlbum) {
+          this.$pagination.innerText = this.opts.template
+            .replace('$index', this.activeIndex + 1)
+            .replace('$total', this.album.length)
+
           this.$arrowR.classList.remove(CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
           this.$arrowL.classList.remove(CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
-          this.$albumName.classList.remove(CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
         }
 
       } else if (this.status === STATUS.SHOWED) {
         this.opts.onShowed && this.opts.onShowed()
 
+        if (this.title || this.desc || this.isAlbum) {
+          this.$title.innerText = this.title
+          this.$desc.innerText = this.desc
+          this.$info.classList.remove(CLASS.HIDE)
+        }
+
       } else if (this.status === STATUS.DISAPPEARING) {
         this.opts.onDisappearing && this.opts.onDisappearing()
 
         this._inactive()
+
+        this.$info.classList.add(CLASS.HIDE)
 
         if (this.isAlbum) {
           this.$arrowL.removeEventListener('click', throttlePrevPage)
@@ -189,14 +224,13 @@ class LightBox {
 
           this.$arrowR.classList.add(CLASS.FORCE_TRANSPARENT)
           this.$arrowL.classList.add(CLASS.FORCE_TRANSPARENT)
-          this.$albumName.classList.add(CLASS.FORCE_TRANSPARENT)
         }
       }
 
       /* change, add event listener */
-      this.$img.style.willChange = 'transform'
+      css(this.$img, {willChange: 'transform'})
       document.documentElement.classList.add(CLASS.LOCKED)
-      window.addEventListener('touchmove', holdScroll)
+      window.addEventListener('touchmove', preventDefault)
       window.addEventListener('resize', throttleActive)
     }
   }
@@ -223,7 +257,10 @@ class LightBox {
   }
 
   _update (target) {
+    this.$el && this.$el.classList.remove(CLASS.FORCE_TRANSPARENT)
     this.$el = target
+    this.title = this.$el.getAttribute(INFO.TITLE)
+    this.desc = this.$el.getAttribute(INFO.DESC)
     this._inactive()
     const preload = new Image()
     const src = this.$el.getAttribute('src')
@@ -242,26 +279,25 @@ class LightBox {
     this._build()
     this._listen()
     window.addEventListener('click', ({target: t}) => {
-      this.albumName = t.getAttribute('xz-lightbox')
-      if (!t.tagName || 'IMG' !== t.tagName.toUpperCase() || typeof this.albumName === 'object')
+      const albumName = t.getAttribute(LISTEN_ATTR)
+      if (!t.tagName || 'IMG' !== t.tagName.toUpperCase() || typeof albumName === 'object' /* no attribute xz-lightbox */)
         return
-
-
-      this.album = document.querySelectorAll(`img[xz-lightbox="${this.albumName}"]`)
+      if (albumName.trim()) {
+        this.album = document.querySelectorAll(`img[${LISTEN_ATTR}="${albumName}"]`)
+      }
       this.isAlbum = this.album.length > 1 // album
       if (this.isAlbum) {
         this.activeIndex = Array.prototype.indexOf.call(this.album, t)
         if (this.activeIndex === -1)
           return
-        this.$albumName.innerText = this.albumName
+        this.$pagination.classList.remove(CLASS.HIDE)
         this.$arrowL.addEventListener('click', throttlePrevPage)
         this.$arrowR.addEventListener('click', throttleNextPage)
         this.$img.addEventListener('click', throttleNextPage)
-        this.$img.setAttribute('title', 'Next page!')
         window.addEventListener('keydown', throttleKeyBoard)
+      } else {
+        this.$pagination.classList.add(CLASS.HIDE)
       }
-
-
       this._update(t)
     })
   }

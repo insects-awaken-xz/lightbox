@@ -15,6 +15,11 @@ html {
     width: 100%;
     height: 100%;
     z-index: 99999;
+    font-family: -apple-system, BlinkMacSystemFont, San Francisco, Helvetica Neue, Helvetica, Ubuntu, Roboto, Noto, Segoe UI, Arial, sans-serif;
+    &,
+    & * {
+      box-sizing: border-box;
+    }
     &.xlb-hide,
     .xlb-hide {
       display: none;
@@ -26,20 +31,13 @@ html {
       width: inherit;
       height: inherit;
       background: rgba(0, 0, 0, .818);
-    }
-    .xlb-album {
-      position: absolute;
-      top: 10px;
-      left: 0;
-      right: 0;
-      margin: 0 auto;
-      text-align: center;
       color: #FFF;
-      text-shadow: -3px 3px 0 rgba(0, 0, 0, .618);
+      cursor: zoom-out;
     }
     .xlb-img {
       display: block;
       cursor: pointer;
+      background: #FFF;
     }
     .xlb-arrow {
       position: absolute;
@@ -53,17 +51,43 @@ html {
       cursor: pointer;
       &.xlb-arrow-right {
         right: 15px;
-        border-left: 20px solid #DDD;
+        border-left: 20px solid #AAA;
         &:hover {
           border-left-color: #FFF;
         }
       }
       &.xlb-arrow-left {
         left: 15px;
-        border-right: 20px solid #DDD;
+        border-right: 20px solid #AAA;
         &:hover {
           border-right-color: #FFF;
         }
+      }
+    }
+    .xlb-info {
+      position: absolute;
+      color: #FFF;
+      text-align: left;
+      font-size: 12px;
+      line-height: 16px;
+      padding: 10px;
+      text-shadow: -1px 1px 0 #000;
+      background: linear-gradient(to top, rgba(0, 0, 0, .618) 16%, transparent);
+      overflow: auto;
+      .xlb-title,
+      .xlb-pagination {
+        font-weight: 500;
+      }
+      .xlb-title {
+        padding-bottom: 6px;
+      }
+      .xlb-pagination {
+        float: right;
+        padding-left: 20px;
+      }
+      .xlb-desc {
+        clear: both;
+        text-align: justify;
       }
     }
   }

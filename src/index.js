@@ -80,7 +80,7 @@ class LightBox {
           : STATUS.SHOWED)
     })
     this.$.backdrop.addEventListener('click', () => {
-      this._setStatus(STATUS.DISAPPEARING)
+      this.status !== STATUS.DISAPPEARING && this._setStatus(STATUS.DISAPPEARING)
     })
     window.addEventListener('click', ({target: t}) => {
       const album = this.album
@@ -198,6 +198,7 @@ class LightBox {
       this._initData()
       this.opts.onDisappeared && this.opts.onDisappeared()
     } else if (this.status === STATUS.SHOWING) {
+      if (lastStatus === STATUS.DISAPPEARING) return // when click fast will happen
       if (lastStatus === STATUS.DISAPPEARED) { // show first photo
         this.$.lightbox.classList.remove(CLASS.HIDE)
         this.$.backdrop.offsetWidth
@@ -222,9 +223,11 @@ class LightBox {
         this.$.arrowR.classList.remove(CLASS.FORCE_TRANSPARENT)
         this.$.arrowL.classList.remove(CLASS.FORCE_TRANSPARENT)
       }
-      this.$.info.classList.remove(CLASS.HIDE)
-      this.$.info.offsetWidth
-      this.$.info.classList.remove(CLASS.FORCE_TRANSPARENT)
+      if (this.title || this.desc || this.isAlbum) {
+        this.$.info.classList.remove(CLASS.HIDE)
+        this.$.info.offsetWidth
+        this.$.info.classList.remove(CLASS.FORCE_TRANSPARENT)
+      }
       this.opts.onShowed && this.opts.onShowed()
     } else if (this.status === STATUS.DISAPPEARING) {
       this._inactive(true)
@@ -245,7 +248,7 @@ class LightBox {
     else if (e.keyCode === 39 || e.keyCode === 68 || e.keyCode === 13 || e.keyCode === 32) // ➡️ || D || Enter || Space
       this._togglePage(true)
     else if (e.keyCode === 27) // esc
-      this._setStatus(STATUS.DISAPPEARING)
+      this.status !== STATUS.DISAPPEARING && this._setStatus(STATUS.DISAPPEARING)
   }
 
   _togglePage (isNextPage) {

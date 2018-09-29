@@ -4,17 +4,23 @@
   <meta charset="UTF-8">
   <title>xz-lightbox</title>
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-  <script src="../dist/lightbox.min.js"></script>
-  <link rel="stylesheet" href="../dist/lightbox.min.css">
+  <script src="lightbox.min.js"></script>
+  <link rel="stylesheet" href="lightbox.min.css">
   <style>
     body {
       margin: 0;
-      text-align: center;
+    }
+
+    .col {
+      float: left;
+      width: 300px;
+      margin-right: 10px;
     }
 
     .test {
-      width: 47.4%;
-      height: 200px;
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
     }
   </style>
   <script>
@@ -52,24 +58,27 @@
           Object.assign(opts, {hide: true})
           break
         case 'b3':
-          Object.assign(opts, {duration: 300})
+          Object.assign(opts, {duration: 382})
           break
         case 'b4':
-          Object.assign(opts, {offset: 10})
+          Object.assign(opts, {offset: 200})
           break
         case 'b5':
+          Object.assign(opts, {template: '$index/$total张'})
+          break
+        case 'b6':
           Object.assign(opts, {
             onShowing: function () {
               console.info('showing')
             },
             onShowed: function () {
-              alert('showed')
+              console.info('showed')
             },
             onDisappearing: function () {
               console.info('disappearing')
             },
             onDisappeared: function () {
-              alert('disappeared')
+              console.info('disappeared')
             }
           })
           break
@@ -80,19 +89,56 @@
   </script>
 </head>
 <body>
-<img class="test" xz-lightbox src="//home1.img.focus.cn/bp_65296f8abbee4f0aba42b88680370302">
-<img class="test" xz-lightbox src="//home1.img.focus.cn/bp_7523af28dd8d486e9029b424f2d73736">
-<img class="test" xz-lightbox src="//home1.img.focus.cn/bp_3e6b2b224c384962a08e3093e69ca785">
-<img class="test" xz-lightbox src="//home1.img.focus.cn/bp_ac72a2d5e4ca4a23ab635f84db574465">
-<img class="test" xz-lightbox src="//home1.img.focus.cn/bp_5dd0dcb9f4334588bbafb7dba4c2b636">
-<img class="test" xz-lightbox src="//home1.img.focus.cn/bp_3aec8993f99943cdadebd06eb7d95297">
-<img class="test" xz-lightbox src="//home1.img.focus.cn/bp_79115d55358d4b508226323896abaa8f">
+<div class="col">
+  <img class="test"
+       xz-lightbox
+       title="Mong Kok, Hong Kong"
+       desc="The busy and somewhat dirty area of Mong Kok, Hong Kong."
+       src="//images.unsplash.com/photo-1496284045406-d3e0b918d7ba?ixlib=rb-0.3.5&s=1e7a1087885c1a92993249891ee4bdf4&auto=format&fit=crop&w=1534&q=80">
+</div>
+
+<div class="col">
+  <img class="test"
+       xz-lightbox="City"
+       title="Hyde Park, London, United Kingdom"
+       desc="In London Hyde park, winter wonderland. Saw a lot of machines turning around, with fancy light."
+       src="//images.unsplash.com/photo-1481328101413-1eef25cc76c0?ixlib=rb-0.3.5&s=8d4d9fb8f707207b046bcb36194a960a&auto=format&fit=crop&w=1650&q=80">
+  <img class="test"
+       xz-lightbox="City"
+       title="Chinatown, New York, United States"
+       desc="Saturday nights in Chinatown are always busy."
+       src="//images.unsplash.com/photo-1534218045467-c23a3949854e?ixlib=rb-0.3.5&s=d067698c93439e0eef5913f2729d90f1&auto=format&fit=crop&w=912&q=80">
+  <img class="test"
+       xz-lightbox="City"
+       title="Shanghai, China"
+       desc="walking in Shanghai"
+       src="//images.unsplash.com/photo-1517309230475-6736d926b979?ixlib=rb-0.3.5&s=636796e193e39a8dcb84e5bd189012a4&auto=format&fit=crop&w=1650&q=80">
+  <img class="test"
+       xz-lightbox="City"
+       title=""
+       desc=""
+       src="//home1.img.focus.cn/bp_5dd0dcb9f4334588bbafb7dba4c2b636">
+</div>
+
+<div class="col">
+  <img class="test"
+       xz-lightbox="Other Photos."
+       title=""
+       desc=""
+       src="//home1.img.focus.cn/bp_3aec8993f99943cdadebd06eb7d95297">
+  <img class="test"
+       xz-lightbox="Other Photos."
+       title=""
+       desc=""
+       src="//home1.img.focus.cn/bp_79115d55358d4b508226323896abaa8f">
+</div>
 <div>
   <button id="b1">默认配置</button>
   <button id="b2">隐藏点击图片 {hide: true}</button>
-  <button id="b3">修改动画时间 {duration: 300}</button>
-  <button id="b4">修改距最大距离窗口 {offset: 10}</button>
-  <button id="b5">钩子函数(控制台输出)</button>
+  <button id="b3">修改动画时间 {duration: 382}</button>
+  <button id="b4">修改距最大距离窗口 {offset: 200} (不建议修改)</button>
+  <button id="b5">修改相册pagination模版 {template: $index/$total张}</button>
+  <button id="b6">钩子函数(控制台输出)</button>
 </div>
 </body>
 </html>

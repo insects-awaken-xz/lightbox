@@ -1,5 +1,4 @@
-/** throttle */
-const throttle = (wait, cb) => {
+const throttle = (cb, wait = 33) => {
   let timeout
   return function (arg) {
     if (timeout)
@@ -11,18 +10,29 @@ const throttle = (wait, cb) => {
   }
 }
 
-/** preventDefault */
+const createEl = (name, classes, id) => {
+  const el = document.createElement(name)
+  id && (el.id = id)
+  classes && classes.length && el.classList.add(...classes)
+  return el
+}
+
+const appendChildren = (parent, children) => {
+  children.map(child => parent.appendChild(child))
+  return parent
+}
+
 const preventDefault = e => e.preventDefault()
 
-/** css */
-const css = (el, obj) => {
-  if (!(el instanceof HTMLElement))
-    return
-  Object.keys(obj).map(attribute => el.style[attribute] = obj[attribute])
-}
+const css = (el, obj) => Object.keys(obj).map(attribute => el.style[attribute] = obj[attribute])
+
+const toggleEventListener = isAdd => isAdd ? 'addEventListener' : 'removeEventListener'
 
 export {
   css,
   throttle,
-  preventDefault
+  createEl,
+  preventDefault,
+  appendChildren,
+  toggleEventListener
 }

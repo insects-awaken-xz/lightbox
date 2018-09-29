@@ -1,5 +1,5 @@
-import {css, throttle, preventDefault} from './utils'
-import {CLASS, STATUS, EVENTS, INFO, LISTEN_ATTR, DEFAULT_OPTS} from './constants'
+import {CLASS, DEFAULT_OPTS, EVENTS, INFO, LISTEN_ATTR, STATUS} from './constants'
+import {createEl, css, appendChildren, throttle, preventDefault, toggleEventListener} from './utils'
 
 let throttleActive
 let throttleKeyBoard
@@ -8,12 +8,273 @@ let throttleNextPage
 
 class LightBox {
   constructor () {
-    this.initial = DEFAULT_OPTS
-    Object.defineProperty(this.option(), 'status', {
-      set: this._statusHandle,
-      get: () => status,
-      enumerable: true
+    this.defaultOpts = DEFAULT_OPTS
+    this.option()
+  }
+
+  /**
+   * build html, only play once
+   */
+  _build () {
+    if (this.$) return
+    /* all calculated value in obj calc */
+    this.$ = {}
+    this._initData()
+    this.$.lightbox = createEl('div', [CLASS.LIGHTBOX, CLASS.HIDE], CLASS.LIGHTBOX)
+    this.$.backdrop = createEl('div', [CLASS.BACKDROP, CLASS.FORCE_TRANSPARENT])
+    this.$.photo = createEl('img', [CLASS.PHOTO])
+    this.$.arrowR = createEl('div', [CLASS.ARROW, CLASS.ARROW_RIGHT, CLASS.HIDE, CLASS.FORCE_TRANSPARENT])
+    this.$.arrowL = createEl('div', [CLASS.ARROW, CLASS.ARROW_LEFT, CLASS.HIDE, CLASS.FORCE_TRANSPARENT])
+    this.$.info = createEl('div', [CLASS.INFO, CLASS.HIDE, CLASS.FORCE_TRANSPARENT])
+    this.$.pagination = createEl('div', [CLASS.PAGINATION, CLASS.HIDE])
+    this.$.title = createEl('div', [CLASS.TITLE])
+    this.$.desc = createEl('div', [CLASS.DESC])
+    appendChildren(document.body, [
+      appendChildren(this.$.lightbox, [this.$.backdrop, this.$.photo, this.$.arrowL, this.$.arrowR,
+        appendChildren(this.$.info, [this.$.pagination, this.$.title, this.$.desc])
+      ])
+    ])
+    this._setDuration()
+    /* init listener function */
+    throttleActive = throttle(this._active.bind(this))
+    throttleKeyBoard = throttle(this._keyboard.bind(this))
+    throttlePrevPage = throttle(this._togglePage.bind(this, false))
+    throttleNextPage = throttle(this._togglePage.bind(this, true))
+  }
+
+  _initData () {
+    this.calc = {}
+    this.album = {}
+    this.$.el = undefined
+    this.title = ''
+    this.desc = ''
+    this.isAlbum = false
+    this.status = STATUS.DISAPPEARED
+  }
+
+  _setDuration () {
+    const t = `${this.opts.duration}ms`
+    const a = 'ease'
+    css(this.$.photo, {transition: `transform ${t} ${a}`})
+    css(this.$.info, {transition: `bottom ${t} ${a}, left ${t} ${a}, width ${t} ${a}, opacity ${t} ${a}`})
+    css(this.$.backdrop, {transition: `opacity ${t} ${a}`})
+    css(this.$.arrowR, {transition: `opacity ${t} ${a}, border-color 300ms ${a}`})
+    css(this.$.arrowL, {transition: `opacity ${t} ${a}, border-color 300ms ${a}`})
+  }
+
+  /**
+   * event listener, shouldn't be removed
+   */
+  _listen () {
+    this.$.photo.addEventListener('transitionend', () => {
+      this._setStatus(this.status === STATUS.SHOWING ? STATUS.SHOWED
+        : this.status === STATUS.DISAPPEARING ? STATUS.DISAPPEARED
+          : STATUS.SHOWED)
     })
+    this.$.backdrop.addEventListener('click', () => {
+      this._setStatus(STATUS.DISAPPEARING)
+    })
+    window.addEventListener('click', ({target: t}) => {
+      const album = this.album
+      album.name = t.getAttribute(LISTEN_ATTR)
+      if (!t.tagName || 'IMG' !== t.tagName.toUpperCase() || typeof album.name === 'object'/* null */)
+        return
+      if (album.name.trim()) {
+        album.photos = document.querySelectorAll(`img[${LISTEN_ATTR}="${album.name}"]`)
+        this.isAlbum = album.photos.length > 1
+      }
+      if (this.isAlbum) {
+        album.index = Array.prototype.indexOf.call(album.photos, t)
+        if (album.index === -1) {
+          this._initData()
+          return
+        }
+        this._albumEventListener(true)
+        this.$.pagination.classList.remove(CLASS.HIDE)
+      } else {
+        this.$.pagination.classList.add(CLASS.HIDE)
+      }
+      this._update(t)
+    })
+  }
+
+  /**
+   * calc img disappeared position
+   */
+  _inactive (isDisappeared) {
+    const calc = this.calc
+    const lastWidth = calc.elWidth
+    const lastHeight = calc.elHeight
+
+    const domRect = this.$.el.getBoundingClientRect()
+    calc.elWidth = domRect.width
+    calc.elHeight = domRect.height
+
+    css(this.$.photo, isDisappeared ? {
+      width: `${lastWidth}px`,
+      height: `${lastHeight}px`,
+      transform: `translate(${(calc.elWidth - lastWidth) / 2 + domRect.left}px, ${(calc.elHeight - lastHeight) / 2 + domRect.top}px) 
+                  scale(${calc.elWidth / lastWidth}, ${calc.elHeight / lastHeight})`
+    } : {
+      width: `${calc.elWidth}px`,
+      height: `${calc.elHeight}px`,
+      transform: `translate(${domRect.left}px, ${domRect.top}px) scale(1, 1)`
+    })
+  }
+
+  /**
+   * calc img showed position
+   */
+  _active () {
+    const calc = this.calc
+    const width = this.$.lightbox.offsetWidth // hack
+    const height = this.$.lightbox.offsetHeight // hack
+    const maxWidth = width - this.opts.offset
+    const maxHeight = height - this.opts.offset
+
+    if (calc.originWidth <= maxWidth && calc.originHeight <= maxHeight) {
+      calc.lastWidth = calc.originWidth
+    } else {
+      calc.lastWidth = maxWidth
+      if (calc.lastWidth * calc.originRatio > maxHeight) {
+        calc.lastWidth = Math.floor(maxHeight / calc.originRatio)
+      }
+    }
+    calc.lastHeight = Math.floor(calc.lastWidth * calc.originRatio)
+    const scaleX = calc.lastWidth / calc.elWidth
+    const scaleY = calc.lastHeight / calc.elHeight
+    const translateX = (width - calc.elWidth) / 2
+    const translateY = (height - calc.elHeight) / 2
+
+    css(this.$.photo, {transform: `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`})
+    css(this.$.info, {
+      bottom: `${(height - calc.lastHeight) / 2 - 1}px`,
+      width: `${calc.lastWidth}px`,
+      left: `${(width - calc.lastWidth) / 2}px`
+    })
+  }
+
+  /**
+   * all status
+   *                 addListen              removed
+   *                    ======================>
+   *                   ||                     ||
+   * disappeared => showing => showed => disappearing
+   *      ||       || || ||        ||         ||
+   *      ||       <===  <==========          ||
+   *       <==================================
+   *
+   *  all $element.offsetWidth is hack. Used to resolve the transition does not fire after display: none => display: block
+   */
+  _setStatus (currentStatus) {
+    const lastStatus = this.status
+    this.status = currentStatus
+    if (lastStatus === STATUS.DISAPPEARED && this.status === STATUS.SHOWING ||
+      lastStatus === STATUS.DISAPPEARING && this.status === STATUS.DISAPPEARED) {
+      const begin = lastStatus === STATUS.DISAPPEARED
+      css(this.$.photo, {willChange: begin ? 'transform' : 'auto'})
+      document.documentElement.classList[begin ? 'add' : 'remove'](CLASS.LOCKED)
+      window[toggleEventListener(begin)]('touchmove', preventDefault)
+      window[toggleEventListener(begin)]('resize', throttleActive)
+    }
+    if (this.status === STATUS.DISAPPEARED) {
+      css(this.$.photo, {transform: 'unset'})
+      this.opts.hide && this.$.el.classList.remove(CLASS.FORCE_TRANSPARENT)
+      this.$.lightbox.classList.add(CLASS.HIDE)
+      this._initData()
+      this.opts.onDisappeared && this.opts.onDisappeared()
+    } else if (this.status === STATUS.SHOWING) {
+      if (lastStatus === STATUS.DISAPPEARED) { // show first photo
+        this.$.lightbox.classList.remove(CLASS.HIDE)
+        this.$.backdrop.offsetWidth
+        this.$.backdrop.classList.remove(CLASS.FORCE_TRANSPARENT)
+      } else {
+        if (lastStatus === STATUS.SHOWED) {
+          this.$.info.classList.add(CLASS.HIDE)
+          this.$.info.offsetWidth
+          this.$.info.classList.add(CLASS.FORCE_TRANSPARENT)
+        }
+      }
+      this._active()
+      this.opts.hide && this.$.el.classList.add(CLASS.FORCE_TRANSPARENT)
+      this.opts.onShowing && this.opts.onShowing()
+    } else if (this.status === STATUS.SHOWED) {
+      if (this.isAlbum) {
+        this.$.arrowR.classList.remove(CLASS.HIDE)
+        this.$.arrowL.classList.remove(CLASS.HIDE)
+        this.$.arrowR.offsetWidth
+        this.$.arrowL.offsetWidth
+        this.$.arrowR.classList.remove(CLASS.FORCE_TRANSPARENT)
+        this.$.arrowL.classList.remove(CLASS.FORCE_TRANSPARENT)
+      }
+      this.$.info.classList.remove(CLASS.HIDE)
+      this.$.info.offsetWidth
+      this.$.info.classList.remove(CLASS.FORCE_TRANSPARENT)
+      this.opts.onShowed && this.opts.onShowed()
+    } else if (this.status === STATUS.DISAPPEARING) {
+      this._inactive(true)
+      this.$.backdrop.classList.add(CLASS.FORCE_TRANSPARENT)
+      this.$.info.classList.add(CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
+      if (this.isAlbum) {
+        this._albumEventListener(false)
+        this.$.arrowR.classList.add(CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
+        this.$.arrowL.classList.add(CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
+      }
+      this.opts.onDisappearing && this.opts.onDisappearing()
+    }
+  }
+
+  _keyboard (e) {
+    if (e.keyCode === 37 || e.keyCode === 65) // ⬅️ || A
+      this._togglePage(false)
+    else if (e.keyCode === 39 || e.keyCode === 68 || e.keyCode === 13 || e.keyCode === 32) // ➡️ || D || Enter || Space
+      this._togglePage(true)
+    else if (e.keyCode === 27) // esc
+      this._setStatus(STATUS.DISAPPEARING)
+  }
+
+  _togglePage (isNextPage) {
+    const album = this.album
+    const photos = album.photos
+    const length = photos.length
+    album.index += isNextPage ? 1 : -1
+    album.index = (album.index + length) % length
+    this._update(photos[album.index], true)
+  }
+
+  _update (target, updateAlbum) {
+    /* show last photo when isAlbum */
+    this.opts.hide && this.$.el && this.$.el.classList.remove(CLASS.FORCE_TRANSPARENT)
+
+    this.$.el = target
+
+    this.title = target.getAttribute(INFO.TITLE)
+    this.desc = target.getAttribute(INFO.DESC)
+    this.$.title.innerText = this.title || ''
+    this.$.desc.innerText = this.desc || ''
+    this.isAlbum && (this.$.pagination.innerText = this.opts.template
+      .replace('$index', this.album.index + 1)
+      .replace('$total', this.album.photos.length))
+
+    !updateAlbum && this._inactive()
+    const preload = new Image()
+    const src = target.getAttribute('src')
+    preload.src = src
+    preload.onload = () => {
+      this.$.photo.src = src
+      this.calc.originWidth = preload.width
+      this.calc.originHeight = preload.height
+      this.calc.originRatio = preload.height / preload.width
+      this.$.photo.onload = () => this._setStatus(STATUS.SHOWING)
+    }
+    preload.onerror = console.error
+  }
+
+  _albumEventListener (begin) {
+    this.$.arrowL[toggleEventListener(begin)]('click', throttlePrevPage)
+    this.$.arrowR[toggleEventListener(begin)]('click', throttleNextPage)
+    this.$.photo[toggleEventListener(begin)]('click', throttleNextPage)
+    window[toggleEventListener(begin)]('keydown', throttleKeyBoard)
   }
 
   option (opts) {
@@ -24,282 +285,14 @@ class LightBox {
         }
       }
     })
-    this.opts = Object.assign({}, this.initial, opts)
-    this.$lightbox && this._setDuration()
+    this.opts = Object.assign({}, this.defaultOpts, opts)
+    if (this.$) this._setDuration()
     return this
-  }
-
-  /**
-   * build html, only play once
-   */
-  _build () {
-    if (this.$lightbox) return
-    /* all calculated value in obj calc */
-    this.calc = {}
-    this.album = []
-    this.isAlbum = false
-    this.$lightbox = document.createElement('div')
-    this.$lightbox.id = CLASS.LIGHTBOX
-    this.$lightbox.classList.add(CLASS.LIGHTBOX, CLASS.HIDE)
-
-    this.$backdrop = document.createElement('div')
-    this.$backdrop.classList.add(CLASS.BACKDROP, CLASS.FORCE_TRANSPARENT)
-
-    this.$img = document.createElement('img')
-    this.$img.classList.add(CLASS.IMG)
-
-    this.$arrowR = document.createElement('div')
-    this.$arrowR.classList.add(CLASS.ARROW, CLASS.ARROW_RIGHT, CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
-    this.$arrowL = document.createElement('div')
-    this.$arrowL.classList.add(CLASS.ARROW, CLASS.ARROW_LEFT, CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
-
-    this.$info = document.createElement('div')
-    this.$info.classList.add(CLASS.INFO, CLASS.HIDE)
-    this.$pagination = document.createElement('div')
-    this.$pagination.classList.add(CLASS.PAGINATION, CLASS.HIDE)
-    this.$title = document.createElement('div')
-    this.$title.classList.add(CLASS.TITLE)
-    this.$desc = document.createElement('div')
-    this.$desc.classList.add(CLASS.DESC)
-    this.$info.appendChild(this.$pagination)
-    this.$info.appendChild(this.$title)
-    this.$info.appendChild(this.$desc)
-
-    this.$lightbox.appendChild(this.$backdrop)
-    this.$lightbox.appendChild(this.$img)
-    this.$lightbox.appendChild(this.$arrowL)
-    this.$lightbox.appendChild(this.$arrowR)
-    this.$lightbox.appendChild(this.$info)
-    document.body.appendChild(this.$lightbox)
-    this._setDuration()
-
-    /* init listener function */
-    throttleActive = throttle(33, this._active.bind(this))
-    throttleKeyBoard = throttle(33, this._keyboard.bind(this))
-    throttlePrevPage = throttle(33, this._prevPage.bind(this))
-    throttleNextPage = throttle(33, this._nextPage.bind(this))
-  }
-
-  _setDuration () {
-    const t = `${this.opts.duration}ms ease`
-    css(this.$img, {transition: `transform ${t}`})
-    css(this.$info, {transition: `bottom ${t}, left ${t}, width ${t}`})
-    css(this.$backdrop, {transition: `opacity ${t}`})
-    css(this.$arrowR, {transition: `opacity ${t}, border-color 300ms ease`})
-    css(this.$arrowL, {transition: `opacity ${t}, border-color 300ms ease`})
-  }
-
-  /**
-   * event listener, shouldn't be removed
-   */
-  _listen () {
-    this.$img.addEventListener('transitionend', () =>
-      this.status = this.status === STATUS.SHOWING
-        ? STATUS.SHOWED
-        : this.status === STATUS.DISAPPEARING
-          ? STATUS.DISAPPEARED
-          : '' /* impossible status */
-    )
-    this.$backdrop.addEventListener('click', () => {
-      this.status = STATUS.DISAPPEARING
-    })
-  }
-
-  /**
-   * calc img disappeared position
-   */
-  _inactive () {
-    const elStyle = this.$el.getBoundingClientRect()
-    this.calc.elW = elStyle.width
-    this.calc.elH = elStyle.height
-    css(this.$img, {
-      width: `${this.calc.elW}px`,
-      height: `${this.calc.elH}px`,
-      transform: `translate(${elStyle.left}px, ${elStyle.top}px) scale(1, 1)`
-    })
-    this.$backdrop.classList.add(CLASS.FORCE_TRANSPARENT)
-  }
-
-  /**
-   * calc img showed position
-   */
-  _active () {
-    const s = this.$lightbox.getBoundingClientRect()
-    const screenW = s.width - this.opts.offset
-    const screenH = s.height - this.opts.offset
-
-    if (this.calc.originW <= screenW && this.calc.originH <= screenH) {
-      this.calc.lastW = this.calc.originW
-    } else {
-      this.calc.lastW = screenW
-      if (this.calc.lastW * this.calc.originRatio > screenH) {
-        this.calc.lastW = screenH / this.calc.originRatio
-      }
-    }
-    const lastH = this.calc.lastW * this.calc.originRatio
-
-    const scaleX = this.calc.lastW / this.calc.elW
-    const scaleY = lastH / this.calc.elH
-    const translateX = (screenW + this.opts.offset - this.calc.elW) / 2
-    const translateY = (screenH + this.opts.offset - this.calc.elH) / 2
-    css(this.$img, {transform: `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`})
-    this.$backdrop.classList.remove(CLASS.FORCE_TRANSPARENT)
-    css(this.$info, {
-      bottom: `${(s.height - lastH) / 2 - 1}px`,
-      width: `${this.calc.lastW}px`,
-      left: `${(s.width - this.calc.lastW) / 2}px`
-    })
-  }
-
-  /**
-   * intensively status handle
-   */
-  _statusHandle (nextStatus) {
-    status = nextStatus
-    if (this.status === STATUS.DISAPPEARED) {
-      this.opts.onDisappeared && this.opts.onDisappeared()
-
-      if (this.opts.hide)
-        this.$el.classList.remove(CLASS.FORCE_TRANSPARENT)
-
-      this.$lightbox.classList.add(CLASS.HIDE)
-
-      /* change el status, remove event listen */
-      css(this.$img, {willChange: 'auto'})
-      document.documentElement.classList.remove(CLASS.LOCKED)
-      window.removeEventListener('touchmove', preventDefault)
-      window.removeEventListener('resize', throttleActive)
-
-      /* clear data */
-      this.calc = {}
-      this.$el = undefined
-
-      /* if isAlbum, remove listener and clear data */
-      if (this.isAlbum) {
-        this.album = []
-        this.$arrowR.classList.add(CLASS.HIDE)
-        this.$arrowL.classList.add(CLASS.HIDE)
-      }
-    } else {
-      if (this.status === STATUS.SHOWING) {
-        this.opts.onShowing && this.opts.onShowing()
-
-        if (this.opts.hide)
-          this.$el.classList.add(CLASS.FORCE_TRANSPARENT)
-
-        this.$lightbox.classList.remove(CLASS.HIDE)
-
-        this._active()
-
-        if (this.isAlbum) {
-          this.$pagination.innerText = this.opts.template
-            .replace('$index', this.activeIndex + 1)
-            .replace('$total', this.album.length)
-
-          this.$arrowR.classList.remove(CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
-          this.$arrowL.classList.remove(CLASS.HIDE, CLASS.FORCE_TRANSPARENT)
-        }
-
-      } else if (this.status === STATUS.SHOWED) {
-        this.opts.onShowed && this.opts.onShowed()
-
-        if (this.title || this.desc || this.isAlbum) {
-          this.$title.innerText = this.title
-          this.$desc.innerText = this.desc
-          this.$info.classList.remove(CLASS.HIDE)
-        }
-
-      } else if (this.status === STATUS.DISAPPEARING) {
-        this.opts.onDisappearing && this.opts.onDisappearing()
-
-        this._inactive()
-
-        this.$info.classList.add(CLASS.HIDE)
-
-        if (this.isAlbum) {
-          this.$arrowL.removeEventListener('click', throttlePrevPage)
-          this.$arrowR.removeEventListener('click', throttleNextPage)
-          this.$img.removeEventListener('click', throttleNextPage)
-          window.removeEventListener('keydown', throttleKeyBoard)
-
-          this.$arrowR.classList.add(CLASS.FORCE_TRANSPARENT)
-          this.$arrowL.classList.add(CLASS.FORCE_TRANSPARENT)
-        }
-      }
-
-      /* change, add event listener */
-      css(this.$img, {willChange: 'transform'})
-      document.documentElement.classList.add(CLASS.LOCKED)
-      window.addEventListener('touchmove', preventDefault)
-      window.addEventListener('resize', throttleActive)
-    }
-  }
-
-  _keyboard (e) {
-    if (e.keyCode === 27) { // esc
-      this.status = STATUS.DISAPPEARING
-      return
-    }
-    if (e.keyCode === 37 || e.keyCode === 65) // ⬅️ || A
-      this._prevPage()
-    else if (e.keyCode === 39 || e.keyCode === 68 || e.keyCode === 13 || e.keyCode === 32) // ➡️ || D || Enter || Space
-      this._nextPage()
-  }
-
-  _prevPage () {
-    this.activeIndex = --this.activeIndex < 0 ? this.album.length - 1 : this.activeIndex
-    this._update(this.album[this.activeIndex])
-  }
-
-  _nextPage () {
-    this.activeIndex = ++this.activeIndex > this.album.length - 1 ? 0 : this.activeIndex
-    this._update(this.album[this.activeIndex])
-  }
-
-  _update (target) {
-    this.$el && this.$el.classList.remove(CLASS.FORCE_TRANSPARENT)
-    this.$el = target
-    this.title = this.$el.getAttribute(INFO.TITLE)
-    this.desc = this.$el.getAttribute(INFO.DESC)
-    this._inactive()
-    const preload = new Image()
-    const src = this.$el.getAttribute('src')
-    preload.src = src
-    preload.onload = () => {
-      this.$img.src = src
-      this.calc.originW = preload.width
-      this.calc.originH = preload.height
-      this.calc.originRatio = preload.height / preload.width
-      this.$img.onload = () => this.status = STATUS.SHOWING
-    }
-    preload.onerror = console.error
   }
 
   start () {
     this._build()
     this._listen()
-    window.addEventListener('click', ({target: t}) => {
-      const albumName = t.getAttribute(LISTEN_ATTR)
-      if (!t.tagName || 'IMG' !== t.tagName.toUpperCase() || typeof albumName === 'object' /* no attribute xz-lightbox */)
-        return
-      if (albumName.trim()) {
-        this.album = document.querySelectorAll(`img[${LISTEN_ATTR}="${albumName}"]`)
-      }
-      this.isAlbum = this.album.length > 1 // album
-      if (this.isAlbum) {
-        this.activeIndex = Array.prototype.indexOf.call(this.album, t)
-        if (this.activeIndex === -1)
-          return
-        this.$pagination.classList.remove(CLASS.HIDE)
-        this.$arrowL.addEventListener('click', throttlePrevPage)
-        this.$arrowR.addEventListener('click', throttleNextPage)
-        this.$img.addEventListener('click', throttleNextPage)
-        window.addEventListener('keydown', throttleKeyBoard)
-      } else {
-        this.$pagination.classList.add(CLASS.HIDE)
-      }
-      this._update(t)
-    })
   }
 }
 

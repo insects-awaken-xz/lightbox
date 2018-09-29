@@ -3,12 +3,11 @@ const LISTEN_ATTR = 'xz-lightbox'
 const CLASS = {
   LIGHTBOX: 'xlb',
   BACKDROP: 'xlb-backdrop',
-  CLOSE_BTN: 'xlb-close',
   INFO: 'xlb-info',
   TITLE: 'xlb-title',
   DESC: 'xlb-desc',
   PAGINATION: 'xlb-pagination',
-  IMG: 'xlb-img',
+  PHOTO: 'xlb-photo',
   ARROW: 'xlb-arrow',
   ARROW_RIGHT: 'xlb-arrow-right',
   ARROW_LEFT: 'xlb-arrow-left',

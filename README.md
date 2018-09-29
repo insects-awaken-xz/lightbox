@@ -30,12 +30,15 @@ lightbox.option({
     duration: 618,   // transition time ms           default: 618
     hide: true,      // need hide img be clicked     default: false
     offset: 100,     // offset to window             default: 100
+    template: '$index of $total photos' // album pagination template
 }).start();
+
 lightbox.option({
-	onShowing: () => ({}),         // showing process
-	onShowed: () => ({}),          // has showed
-	onDisappearing: () => ({}),    // disappear process
-	onDisappeared: () => ({}),     // has disappeared
-}) ;
-lightbox.start();     // default opts
+	onShowing: () => ({}),         // start showing
+	onShowed: () => ({}),          // showing transition end, showed
+	onDisappearing: () => ({}),    // start disappearing
+	onDisappeared: () => ({}),     // disappearing transition end, disappeared
+}).start();;
+
+
 ```

@@ -30,8 +30,15 @@ class LightBox {
     this.$.title = createEl('div', [CLASS.TITLE])
     this.$.desc = createEl('div', [CLASS.DESC])
     appendChildren(document.body, [
-      appendChildren(this.$.lightbox, [this.$.backdrop, this.$.photo, this.$.arrowL, this.$.arrowR,
-        appendChildren(this.$.info, [this.$.pagination, this.$.title, this.$.desc])
+      appendChildren(this.$.lightbox, [
+        this.$.backdrop,
+        this.$.photo,
+        this.$.arrowL,
+        this.$.arrowR,
+        appendChildren(this.$.info, [
+          this.$.pagination,
+          this.$.title,
+          this.$.desc])
       ])
     ])
     this._setDuration()
@@ -49,6 +56,7 @@ class LightBox {
     this.title = ''
     this.desc = ''
     this.isAlbum = false
+    this.sameSize = false
     this.status = STATUS.DISAPPEARED
   }
 
@@ -103,18 +111,18 @@ class LightBox {
    */
   _inactive (isDisappeared) {
     const calc = this.calc
-    const lastWidth = calc.elWidth
-    const lastHeight = calc.elHeight
+    const lastElWidth = calc.elWidth
+    const lastElHeight = calc.elHeight
 
     const domRect = this.$.el.getBoundingClientRect()
     calc.elWidth = domRect.width
     calc.elHeight = domRect.height
 
     css(this.$.photo, isDisappeared ? {
-      width: `${lastWidth}px`,
-      height: `${lastHeight}px`,
-      transform: `translate(${(calc.elWidth - lastWidth) / 2 + domRect.left}px, ${(calc.elHeight - lastHeight) / 2 + domRect.top}px) 
-                  scale(${calc.elWidth / lastWidth}, ${calc.elHeight / lastHeight})`
+      width: `${lastElWidth}px`,
+      height: `${lastElHeight}px`,
+      transform: `translate(${(calc.elWidth - lastElWidth) / 2 + domRect.left}px, ${(calc.elHeight - lastElHeight) / 2 + domRect.top}px) 
+                  scale(${calc.elWidth / lastElWidth}, ${calc.elHeight / lastElHeight})`
     } : {
       width: `${calc.elWidth}px`,
       height: `${calc.elHeight}px`,
@@ -132,26 +140,32 @@ class LightBox {
     const maxWidth = width - this.opts.offset
     const maxHeight = height - this.opts.offset
 
+    const lastFinalWidth = calc.finalWidth
+    const lastFinalHeight = calc.finalHeight
+
     if (calc.originWidth <= maxWidth && calc.originHeight <= maxHeight) {
-      calc.lastWidth = calc.originWidth
+      calc.finalWidth = calc.originWidth
     } else {
-      calc.lastWidth = maxWidth
-      if (calc.lastWidth * calc.originRatio > maxHeight) {
-        calc.lastWidth = Math.floor(maxHeight / calc.originRatio)
+      calc.finalWidth = maxWidth
+      if (calc.finalWidth * calc.originRatio > maxHeight) {
+        calc.finalWidth = Math.floor(maxHeight / calc.originRatio)
       }
     }
-    calc.lastHeight = Math.floor(calc.lastWidth * calc.originRatio)
-    const scaleX = calc.lastWidth / calc.elWidth
-    const scaleY = calc.lastHeight / calc.elHeight
+    calc.finalHeight = Math.floor(calc.finalWidth * calc.originRatio)
+
+    const scaleX = calc.finalWidth / calc.elWidth
+    const scaleY = calc.finalHeight / calc.elHeight
     const translateX = (width - calc.elWidth) / 2
     const translateY = (height - calc.elHeight) / 2
 
     css(this.$.photo, {transform: `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`})
     css(this.$.info, {
-      bottom: `${(height - calc.lastHeight) / 2 - 1}px`,
-      width: `${calc.lastWidth}px`,
-      left: `${(width - calc.lastWidth) / 2}px`
+      bottom: `${(height - calc.finalHeight) / 2 - 1}px`,
+      width: `${calc.finalWidth}px`,
+      left: `${(width - calc.finalWidth) / 2}px`
     })
+
+    this.sameSize = lastFinalWidth === calc.finalWidth && lastFinalHeight === calc.finalHeight
   }
 
   /**
@@ -198,6 +212,7 @@ class LightBox {
       this._active()
       this.opts.hide && this.$.el.classList.add(CLASS.FORCE_TRANSPARENT)
       this.opts.onShowing && this.opts.onShowing()
+      this.sameSize && this._setStatus(STATUS.SHOWED)
     } else if (this.status === STATUS.SHOWED) {
       if (this.isAlbum) {
         this.$.arrowR.classList.remove(CLASS.HIDE)

@@ -16,7 +16,7 @@ lightbox.option({...}).start()
 * via CDN
 
 ```
-<link src="https://unpkg.com/xz-lightbox@latest/dist/lightbox.min.css">
+<link rel="stylesheet" href="https://unpkg.com/xz-lightbox@latest/dist/lightbox.min.css">
 <script src="https://unpkg.com/xz-lightbox"></script>
 <script>
  lightbox.option({...}).start();
